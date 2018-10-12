@@ -122,10 +122,10 @@ Functions are string values enclosed in `{{}}`.
 
 | Function                                    | Applicable Data Type | Meaning                                                                                                                       | Example                                              |
 |---------------------------------------------|----------------------|-------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
-| `{{BeEmpty()}}`                             | `String`, `Array`    | The object is empty or the key is not present.                                                                                | These will all match: * "" * [] * The key is missing |
+| `{{BeEmpty()}}`                             | `String`, `Array`    | The object is empty or the key is not present.                                                                                | These will all match: <br/> * "" <br/> * [] <br/> * The key is missing |
 | `{{Not(BeEmpty())}}`                        | `String`, `Array`    | The object is not empty                                                                                                       |                                                      |
 | `{{BeNumerically(<comparator>, <values>)}}` | `Number`             | See [here](https://onsi.github.io/gomega/#benumericallycomparator-string-compareto-interface)                                 | `{{BeNumerically(~, 123, 0.01)}}`                    |
-| `{{BeTimestamp(<time>, <delta>)}}`          | `String`             | * `<time>` must be of [RFC3339 format](https://gobyexample.com/time-formatting-parsing) * `<delta>` is number of milliseconds | `{{BeTimestamp(2018-10-05T12:13:14.000Z, 5000)}}`    |
+| `{{BeTimestamp(<time>, <delta>)}}`          | `String`             | * `<time>` must be of [RFC3339 format](https://gobyexample.com/time-formatting-parsing) <br/>* `<delta>` is number of milliseconds | `{{BeTimestamp(2018-10-05T12:13:14.000Z, 5000)}}`    |
 
 ## Advanced Usage
 
