@@ -1,0 +1,6 @@
+package: github.com/mina-akimi/gosert
+import:
+- package: github.com/buger/jsonparser
+  version: origin/master
+- package: github.com/onsi/gomega
+  version: ^1.4.2

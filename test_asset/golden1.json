@@ -1,0 +1,9 @@
+{
+  "field0": "value0",
+  "field1": {
+    "field1_0": "${{VAR}}",
+    "field1_1": {
+      "field1_1_0": "{{BeTimestamp(${{TIMESTAMP}}, 5000)}}"
+    }
+  }
+}
