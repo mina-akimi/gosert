@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	patternHeaderStart = "###"
-	patternHeaderKey   = regexp.MustCompile(`key=(?P<key>\w+)`)
+	patternCommentStart = "# "
+	patternHeaderStart  = "###"
+	patternHeaderKey    = regexp.MustCompile(`key=(?P<key>\w+)`)
 )
 
 // Read reads a file with variables replaced.
@@ -48,6 +49,7 @@ func MustRead(path string, vars map[string]string) []byte {
 //       "quux": "${{NOW}}"
 //     }
 //
+//     # This is a comment.  Any line starting with `# ` is a comment and is ignored (note the space after hash).
 //     ### key=my_matcher, my awesome matcher
 //     {
 //       "foo": "bar",
@@ -95,7 +97,7 @@ func newMultipartReader(reader io.Reader, vars map[string]string, parser matcher
 		raw = append(raw, scanner.Bytes()...)
 		raw = append(raw, []byte(fmt.Sprintln())...)
 		s := strings.TrimSpace(scanner.Text())
-		if s == "" {
+		if s == "" || strings.HasPrefix(s, patternCommentStart) {
 			continue
 		}
 		if strings.HasPrefix(s, patternHeaderStart) {

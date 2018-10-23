@@ -14,17 +14,17 @@ import (
 
 var (
 	// Usage: {{ts(2018-01-02T12:13:14.123Z, 5000)}}, which means 2018-01-02T12:13:14.123Z +/- 5000 milliseconds
-	patternTimestamp = regexp.MustCompile(`{{BeTimestamp\((?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z),\s*(?P<delta>\d+)\)}}`)
+	patternTimestamp = regexp.MustCompile(`^{{BeTimestamp\((?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z),\s*(?P<delta>\d+)\)}}$`)
 	// Usage: {{num(123.23, 0.5)}}, which means 123.23 +/- 0.5
-	patternNumber = regexp.MustCompile(`{{BeNumerically\((?P<comparator>[^,]+),\s*(?P<data>[^)]+)\)}}`)
+	patternNumber = regexp.MustCompile(`^{{BeNumerically\((?P<comparator>[^,]+),\s*(?P<data>[^)]+)\)}}$`)
 	// Usage: {{BeEmpty()}}, which means the string/array must be empty
-	patternEmpty = regexp.MustCompile(`{{BeEmpty\(\)}}`)
+	patternEmpty = regexp.MustCompile(`^{{BeEmpty\(\)}}$`)
 	// Usage: {{Not(BeEmpty())}}, which means the string/array must not be empty
-	patternNotEmpty = regexp.MustCompile(`{{Not\(BeEmpty\(\)\)}}`)
+	patternNotEmpty = regexp.MustCompile(`^{{Not\(BeEmpty\(\)\)}}$`)
 	// Usage: ${{MY_VAR}}, which can be replaced with a value
 	patternVariable = regexp.MustCompile(`\${{(?P<var>\w+)}}`)
 
-	arrayPatterns = []string{"{{Not(BeEmpty())}}"}
+	arrayPatterns = []string{"^{{Not(BeEmpty())}}$"}
 )
 
 // ===========
@@ -115,7 +115,7 @@ func Walk(path string, exp, act Node, parser Parser) (types.GomegaMatcher, bool,
 				if isBeEmpty(v) {
 					continue
 				}
-				return NewFailureMatcher(path, string(exp.Value), string(act.Value)), false, nil
+				return NewFailureMatcher(path+"."+k, string(v.Value), string(a.Value)), false, nil
 			} else {
 				// Recursion
 				matcher, matched, err := Walk(path+"."+k, v, a, parser)
@@ -150,10 +150,10 @@ func MatchArrayWithArray(path string, exp, act []Node, parser Parser) (types.Gom
 		for k, e := range expMap {
 			a, ok := actMap[k]
 			if !ok {
-				return NewFailureMatcher(path, Nodes(exp).String(), Nodes(act).String()), false, nil
+				return NewFailureMatcher(path+"."+metaKey+"="+k, Nodes(exp).String(), Nodes(act).String()), false, nil
 			}
 			// Recursion
-			matcher, matched, err := Walk(path, e, a, parser)
+			matcher, matched, err := Walk(path+"."+metaKey+"="+k, e, a, parser)
 			if !matched || err != nil {
 				return matcher, matched, err
 			}
