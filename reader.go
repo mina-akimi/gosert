@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	patternCommentStart = "# "
-	patternHeaderStart  = "###"
-	patternHeaderKey    = regexp.MustCompile(`key=(?P<key>\w+)`)
+	patternComment   = regexp.MustCompile(`^\s*#[^#]`)
+	patternHeader    = regexp.MustCompile(`^\s*###`)
+	patternHeaderKey = regexp.MustCompile(`key=(?P<key>\w+)`)
 )
 
 // Read reads a file with variables replaced.
@@ -97,10 +97,10 @@ func newMultipartReader(reader io.Reader, vars map[string]string, parser matcher
 		raw = append(raw, scanner.Bytes()...)
 		raw = append(raw, []byte(fmt.Sprintln())...)
 		s := strings.TrimSpace(scanner.Text())
-		if s == "" || strings.HasPrefix(s, patternCommentStart) {
+		if s == "" || patternComment.MatchString(s) {
 			continue
 		}
-		if strings.HasPrefix(s, patternHeaderStart) {
+		if patternHeader.MatchString(s) {
 			// Add to parts
 			if len(object) > 0 {
 				if key == "" {

@@ -1,6 +1,6 @@
 check:
 		goimports -l -w $$(find . -type f -name '*.go' -not -path "./vendor/*")
-		go vet $$(glide novendor)
+		go vet ./...
 
 test:
 		go test ./...
