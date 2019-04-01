@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mina-akimi/gosert/matcher"
+	"github.com/mina-akimi/gosert/v2/matcher"
 )
 
 var (

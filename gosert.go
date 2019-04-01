@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/mina-akimi/gosert/matcher"
+	"github.com/mina-akimi/gosert/v2/matcher"
 	"github.com/onsi/gomega/types"
 )
 

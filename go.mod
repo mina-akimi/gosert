@@ -1,4 +1,4 @@
-module github.com/mina-akimi/gosert
+module github.com/mina-akimi/gosert/v2
 
 go 1.12
 

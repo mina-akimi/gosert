@@ -3,7 +3,7 @@ package gosert
 import (
 	"testing"
 
-	"github.com/mina-akimi/gosert/matcher"
+	"github.com/mina-akimi/gosert/v2/matcher"
 )
 
 func TestNewMatcherFromFile(t *testing.T) {
