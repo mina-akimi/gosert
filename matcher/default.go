@@ -8,8 +8,10 @@ import (
 )
 
 const (
-	// KeyID is used to identify elements in an array
+	// KeyID is used to identify elements by ID in an array
 	KeyID = "_gst_id"
+	// KeyIndex is used to identify elements by index in an array
+	KeyIndex = "_gst_index"
 )
 
 var (

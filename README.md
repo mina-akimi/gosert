@@ -137,9 +137,64 @@ If any variable is not defined in the value map, an error is returned.
 
 ### Array Assertion
 
-By default, ordering is ignored.
+There are three modes of array assertion: base type array, by index (object array only) or by ID (object array only).
 
-For base type array, the expected value can be an array of base values.
+#### Base Type Array
+
+For base type array, the expected value must be an array of base values.  Ordering is ignored.
+
+#### By Index
+
+**Only object array is supported (base type array is not supported).**
+
+The expected values must contain a field called `_gst_index`, and the value must be an integer (the index of the element in the actual array).
+
+Note you don't need to provide index for all elements.  Just the ones you need to do assertions on.
+
+Example expected values:
+```
+{
+  "connections": [
+    {
+      "_gst_index": 0,
+      "id": "0002",
+      "name": "Julia Meade",
+      "relationship": "ex"
+    },
+    {
+      "_gst_index": 2,
+      "id": "0003",
+      "name": "Ilsa Faust",
+      "relationship": "unclear"
+    }
+  ]
+}
+```
+
+Example actual values:
+```
+{
+  "connections": [
+    {
+      "id": "0002",
+      "name": "Julia Meade",
+      "relationship": "ex"
+    },
+    {
+      "id": "0003",
+      "name": "Benji Dunn",
+      "relationship": "team mate"
+    },
+    {
+      "id": "0004",
+      "name": "Ilsa Faust",
+      "relationship": "unclear"
+    }
+  ]
+}
+```
+
+#### By ID
 
 For object array, the expected values must contain a field called `_gst_id` with value `<key_name>=<value>` (see example above).
 

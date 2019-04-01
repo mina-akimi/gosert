@@ -139,28 +139,49 @@ func MatchArrayWithArray(path string, exp, act []Node, parser Parser) (types.Gom
 		}
 		return SuccessMatcherInstance, true, nil
 	} else if IsObjects(exp) {
-		metaKey, expMap, err := createExpectedIDMapper(exp, parser)
+		isByIndex, err := isArrayExpectedByIndex(exp, parser)
 		if err != nil {
 			return NewFailureMatcher(path, Nodes(exp).String(), Nodes(act).String()), false, err
 		}
-		actMap, err := createActualIDMapper(act, metaKey, parser)
-		if err != nil {
-			return NewFailureMatcher(path, Nodes(exp).String(), Nodes(act).String()), false, err
-		}
-		for k, e := range expMap {
-			a, ok := actMap[k]
-			if !ok {
-				return NewFailureMatcher(path+"."+metaKey+"="+k, Nodes(exp).String(), Nodes(act).String()), false, nil
+		if isByIndex { // Expected by index
+			expMap, err := createExpectedIndexMapper(exp, parser)
+			if err != nil {
+				return NewFailureMatcher(path, Nodes(exp).String(), Nodes(act).String()), false, err
 			}
-			// Recursion
-			matcher, matched, err := Walk(path+"."+metaKey+"="+k, e, a, parser)
-			if !matched || err != nil {
-				return matcher, matched, err
+			for i, a := range act {
+				if e, ok := expMap[i]; ok {
+					// Recursion
+					matcher, matched, err := Walk(path+"["+strconv.Itoa(i)+"]", e, a, parser)
+					if !matched || err != nil {
+						return matcher, matched, err
+					}
+				}
 			}
+			return SuccessMatcherInstance, true, nil
+		} else { // Expected by ID
+			metaKey, expMap, err := createExpectedIDMapper(exp, parser)
+			if err != nil {
+				return NewFailureMatcher(path, Nodes(exp).String(), Nodes(act).String()), false, err
+			}
+			actMap, err := createActualIDMapper(act, metaKey, parser)
+			if err != nil {
+				return NewFailureMatcher(path, Nodes(exp).String(), Nodes(act).String()), false, err
+			}
+			for k, e := range expMap {
+				a, ok := actMap[k]
+				if !ok {
+					return NewFailureMatcher(path+"."+metaKey+"="+k, Nodes(exp).String(), Nodes(act).String()), false, nil
+				}
+				// Recursion
+				matcher, matched, err := Walk(path+"."+metaKey+"="+k, e, a, parser)
+				if !matched || err != nil {
+					return matcher, matched, err
+				}
+			}
+			return SuccessMatcherInstance, true, nil
 		}
-		return SuccessMatcherInstance, true, nil
 	} else {
-		return NewFailureMatcher(path, Nodes(exp).String(), Nodes(act).String()), false, fmt.Errorf("array type assertion must all be base data type or all object type, not a mixtureof both")
+		return NewFailureMatcher(path, Nodes(exp).String(), Nodes(act).String()), false, fmt.Errorf("array type assertion must all be base data type or all object type, not a mixture of both")
 	}
 }
 
@@ -287,12 +308,76 @@ func nodesContain(set, subset []Node) bool {
 	return true
 }
 
+// isArrayExpectedByIndex returns true if all elements have field "_gst_index", false if all elements have "_gst_id".
+//
+// Returns error if any element is missing "_gst_index" or "_gst_id", or if the elements have both.
+func isArrayExpectedByIndex(nodes []Node, parser Parser) (bool, error) {
+	var isByIndex, isByID bool
+	for _, node := range nodes {
+		m := parser.GetFields(node.Value)
+		_, ok1 := m[KeyIndex]
+		if ok1 {
+			if isByID {
+				return false, fmt.Errorf("cannot have some elements with '%s' and some with '%s'", KeyIndex, KeyID)
+			}
+			isByIndex = true
+		}
+		_, ok2 := m[KeyID]
+		if ok2 {
+			if isByIndex {
+				return false, fmt.Errorf("cannot have some elements with '%s' and some with '%s'", KeyIndex, KeyID)
+			}
+			isByID = true
+		}
+		if !ok1 && !ok2 {
+			return false, fmt.Errorf("element must have fields '%s' or '%s'", KeyIndex, KeyID)
+		}
+	}
+	return isByIndex, nil
+}
+
+// createExpectedIndexMapper takes a list of nodes and returns a map from index to Node.
+//
+// E.g., if we have a Node with value like this
+//
+//     {
+//       "_gst_index": 2,
+// 		 "orderId": "1234",
+//       "field0": "value0"
+//     }
+//
+// Then the map will contain 2 mapped to this Node (with "_gst_index" field removed, for matching)
+//
+// Returns an error if the key is an integer.
+func createExpectedIndexMapper(nodes []Node, parser Parser) (map[int]Node, error) {
+	result := map[int]Node{}
+	for _, node := range nodes {
+		m := parser.GetFields(node.Value)
+		if name, ok := m[KeyIndex]; ok {
+			if name.Type != Number {
+				return nil, fmt.Errorf("'%s' field must be of type Number, was %s", KeyIndex, name.Type.String())
+			}
+			index, err := strconv.Atoi(string(name.Value))
+			if err != nil {
+				return nil, fmt.Errorf("%s.  '%s' field must be of type Number", KeyIndex, err.Error())
+			}
+			// Must delete KeyIndex to avoid match failure later, since it's not part of actual value
+			node.Value = parser.Delete(node.Value, KeyIndex)
+			result[index] = node
+		} else {
+			return nil, fmt.Errorf("object array assertion must provide a key '%s' for each element.  See Gosert doc.", KeyIndex)
+		}
+	}
+	return result, nil
+}
+
 // createExpectedIDMapper takes a list of nodes and returns the ID key and a map from the key to Node.
 //
 // E.g., if we have a Node with value like this
 //
 //     {
-//       "_gst_id: "orderId=1234",
+//       "_gst_id": "orderId=1234",
+// 		 "orderId": "1234",
 //       "field0": "value0"
 //     }
 //

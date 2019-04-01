@@ -527,7 +527,7 @@ func TestWalk_Array_Orderless_Number(t *testing.T) {
 	}
 }
 
-func TestWalk_Array_Object(t *testing.T) {
+func TestWalk_Array_Object_ByID(t *testing.T) {
 	exp := Node{
 		Type: Object,
 		Value: []byte(`
@@ -545,7 +545,7 @@ func TestWalk_Array_Object(t *testing.T) {
 						}
 					},
 					{
-						"_gst_id": "myId=id2",
+						"_gst_id": "myId=id1",
 						"myId": "id1",
 						"field1_0_0": 101.123,
 						"field1_0_1": "world",
@@ -555,6 +555,85 @@ func TestWalk_Array_Object(t *testing.T) {
 					},
 					{
 						"_gst_id": "myId=id2",
+						"myId": "id2",
+						"field1_0_0": 102.999,
+						"field1_0_1": "foo",
+						"field1_0_2": {
+							"field1_0_2_2": "value1_0_2_2"
+						}
+					}
+				]
+			}
+		}
+	`),
+	}
+	act := Node{
+		Type: Object,
+		Value: []byte(`
+		{
+			"field0": "value0",
+			"field1": {
+				"field1_0": [
+					{
+						"myId": "id0",
+						"field1_0_0": 100,
+						"field1_0_1": "hello",
+						"field1_0_2": {
+							"field1_0_2_0": "value1_0_2_0"
+						}
+					},
+					{
+						"myId": "id1",
+						"field1_0_0": 101.123,
+						"field1_0_1": "world",
+						"field1_0_2": {
+							"field1_0_2_1": "value1_0_2_1"
+						}
+					},
+					{
+						"myId": "id2",
+						"field1_0_0": 102.999,
+						"field1_0_1": "foo",
+						"field1_0_2": {
+							"field1_0_2_2": "value1_0_2_2"
+						}
+					}
+				]
+			}
+		}
+	`),
+	}
+	matcher, matched, err := Walk("", exp, act, JSONParserInstance)
+	if matcher != SuccessMatcherInstance {
+		t.Fatalf("matcher should be SuccessMatcherInstance but was %+v, matched = %t, err = %+v", matcher, matched, err)
+	}
+	if !matched {
+		t.Fatalf("matched should be true")
+	}
+	if err != nil {
+		t.Fatalf("err should be nil but was %+v", err)
+	}
+}
+
+func TestWalk_Array_Object_ByIndex(t *testing.T) {
+	exp := Node{
+		Type: Object,
+		Value: []byte(`
+		{
+			"field0": "value0",
+			"field1": {
+				"field1_0": [
+					{
+						"_gst_index": 0,
+						"myId": "id0",
+						"field1_0_0": 100,
+						"field1_0_1": "hello",
+						"field1_0_2": {
+							"field1_0_2_0": "value1_0_2_0"
+						}
+					},
+					{
+						"_gst_index": 2,
 						"myId": "id2",
 						"field1_0_0": 102.999,
 						"field1_0_1": "foo",
